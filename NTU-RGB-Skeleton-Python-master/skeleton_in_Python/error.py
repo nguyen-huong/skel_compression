@@ -1,14 +1,14 @@
 import csv
 import pandas as pd
 
-def readFile(fileName = "skeleton_data_error.csv"):
+def readFile(fileName):
     fileIn = open(fileName, "r")
     readData = csv.reader(fileIn)
     data_head = next(readData)
     print (data_head)
 
     #pandas
-    table_data = pd.read_csv( "skeleton_data_error.csv")
+    table_data = pd.read_csv(fileName)
     print(table_data)
     min = table_data['error'].min()
     max = table_data['error'].max()
@@ -20,4 +20,5 @@ def readFile(fileName = "skeleton_data_error.csv"):
     fileIn.close()
 
 
-readFile(fileName = "skeleton_data_error.csv")
+# readFile(fileName = "skeleton_data_error.csv")
+readFile(fileName = "open_pose.csv")

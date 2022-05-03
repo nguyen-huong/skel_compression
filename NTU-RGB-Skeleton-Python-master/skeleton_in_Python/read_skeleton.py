@@ -3,7 +3,7 @@ import utils
 # import cv2
 import numpy as np
 
-skel = '/Users/HuongNguyen/Downloads/workspace/NTURGB/nturgb+d_skeletons/S017C003P020R002A060.skeleton'
+skel = '/Users/HuongNguyen/Downloads/workspace/NTURGB/nturgb+d_skeletons/S017C003P020R002A001.skeleton'
 def read_skeleton(skel):
 
 	#open the skeleton file
@@ -27,7 +27,7 @@ def read_skeleton(skel):
 
 
 if __name__=='__main__':
-	x = read_skeleton(skel)
+	data = read_skeleton(skel)
 
 
 # path='/Users/HuongNguyen/Downloads/workspace/NTURGB/nturgb+d_skeletons/S017C003P020R002A060.skeleton'

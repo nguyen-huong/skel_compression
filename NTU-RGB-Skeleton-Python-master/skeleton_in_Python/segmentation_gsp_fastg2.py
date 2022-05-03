@@ -22,7 +22,7 @@ def graphconstruction1():
     return mat['v']
 
 #reading the data
-path='/Users/HuongNguyen/Downloads/workspace/NTURGB/nturgb+d_skeletons/S017C003P020R002A060.skeleton'
+path='/Users/HuongNguyen/Downloads/workspace/NTURGB/nturgb+d_skeletons/S017C003P020R002A001.skeleton'
 data=read_skeleton(path)
 # print(len(data))    #keys=time stamp
 #

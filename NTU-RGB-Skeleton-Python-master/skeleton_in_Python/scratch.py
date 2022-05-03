@@ -15,6 +15,8 @@ from scipy.fftpack import idct, dct
 from huffman import *
 import matplotlib.pyplot as plt
 from read_skeleton import *
+window_size = 30
+no_joints=18
 
 #function defination
 def graphconstruction_openpose():
@@ -71,11 +73,39 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
 
     # quantization
     # gft_dct_coeff_round=gft_dct_coeff
-    gft_dct_coeff_round=np.round(gft_dct_coeff).astype(int)
+    #gft_dct_coeff_round=np.round(gft_dct_coeff).astype(int)
 
     #### do not use round off
     #use the quatization matrix and divide the coeff by the matrix
+    fs = 1 # sampling frequency
+    ppp = 0
+    inc = 1500
 
+    qt = np.ones((window_size, no_joints))
+    for i in range (0, window_size):
+        qt[i,:] = np.multiply(inc, qt[ i, :])  ##Element-wise multiplicaiton
+        inc = inc-50
+    # print(qt)
+    # gft_dct_coeff_round[0,:,0:window_size]=gft_dct_coeff[0,:,0:window_size]./qt
+    # gft_dct_coeff_round[1, :, 0:window_size] = gft_dct_coeff[1, :, 0:window_size]. / qt
+    print(type(gft_coeff))
+
+    gft_dct_coeff_x = []
+    # gft_dct_coeff_y = []
+    # print (qt.shape)
+    # print(gft_dct_coeff.shape)
+    # a = gft_dct_coeff[0:window_size,:,0]
+    # b = qt
+
+    gft_dct_coeff_x = np.divide(gft_dct_coeff[0:window_size,:,0],qt)
+    gft_dct_coeff_y = np.divide(gft_dct_coeff[0:window_size,:,1],qt)
+
+
+    # print((np.matrix(a))/(np.matrix(b)))
+
+    # gft_dct_coeff_x[0,:,0:window_size] = np.linalg.lstsq(qt.T, gft_dct_coeff[0,:,0:window_size].T)[0].T
+    #
+    # print(gft_dct_coeff_x)
     # plt.imshow(gft_dct_coeff_round[:, :, 0], cmap='hot')
     # cbar = plt.colorbar()
     # plt.show()
@@ -86,15 +116,19 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     # plt.show()
     # plt.close('all')
 
-    print(gft_dct_coeff_round[:,:,0])
+    # print(gft_dct_coeff_round[:,:,0])
 
-    Q = np.array(gft_dct_coeff_round)
-    print(Q.shape)
-    # data_dct =  np.dot(gft_dct_coeff, np.linalg.pinv(Q))
-    print(np.reshape(Q[:, :, 0], ((no_frames - 1) * no_joints), 'C'))
+    Q = np.array(gft_dct_coeff)
+
+    # Q = np.array(gft_dct_coeff_round)
+    # print(Q.shape)
+    #./ divide
+    # a =  np.dot(gft_dct_coeff, np.linalg.pinv())
+
+    # print(np.reshape(Q[:, :, 0], ((no_frames - 1) * no_joints), 'C'))
 
     Q_flat = np.reshape(Q,((no_frames-1)*no_joints*no_coord),'C')
-    print(type(Q_flat))
+    # print(type(Q_flat))
     Q_list = Q_flat.tolist()
     encoding, tree = Huffman_Encoding(Q_list)
     ## transfer encoding
@@ -126,8 +160,14 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     recon_sig=np.array(recon_sig)
 
     err=np.linalg.norm(recon_sig-motion_vector)
-    print('error', err)
+    # print('error', err)
     return encoding, recon_sig
+
+# def comp_gft_mxn(x_data,y_data,z_data,v)
+#     no_joints=25
+    for i in range(no_joints):
+        #data_dct function in Python
+        # data_dct[i,:, 1]
 
 if __name__=='__main__':
     #define data before you run this independently

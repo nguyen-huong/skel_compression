@@ -13,20 +13,22 @@ import array
 import os
 import json
 from skel_compression import *
+# from scratch import *
 
 sourcepath="/Users/HuongNguyen/Downloads/workspace/open_pose/" #change the data path to openpose
 path, folder1, files = next(os.walk(sourcepath))
 elapsed=[]
 no_joints=18
 no_coord=2
-for i in range(0,1):#len(folder1)):
+window_size = 30
+
+for i in range(21,22):#len(folder1)):
     folder2_path=sourcepath+folder1[i]+'/'
     path, folder2, files = next(os.walk(folder2_path))
     posex=[]
     posey=[]
     skel_data=[]
     no_frames=len(files)
-
 
     for j in range(0,len(files)):
         filepath=folder2_path+files[j]
@@ -46,4 +48,6 @@ for i in range(0,1):#len(folder1)):
     # print(skel_data.shape)
 
     skel_comp(skel_data, no_frames, no_joints, no_coord, device='openpose')
+
+    print(np.min(posex), np.min(posey), np.max(posex), np.max(posey) )
 
