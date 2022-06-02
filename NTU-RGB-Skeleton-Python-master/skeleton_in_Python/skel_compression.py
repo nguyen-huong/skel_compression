@@ -17,6 +17,14 @@ import matplotlib.pyplot as plt
 from read_skeleton import *
 
 #function defination
+def quantization_matrix(window_size,no_joints):
+    qt=np.ones((window_size,no_joints))
+    inc=1500
+    for i in range (window_size):
+        qt[i,:]=inc*qt[i,:]
+        inc-=50
+    return qt
+
 def graphconstruction_openpose():
     source_path_skelbasis="/Users/HuongNguyen/Downloads/workspace/compress_skel/skel_basis_openpose.mat" #trying to load the gsf basis
     mat = scipy.io.loadmat(source_path_skelbasis)
@@ -27,34 +35,40 @@ def graphconstruction_kinect():
     mat = scipy.io.loadmat(source_path_skelbasis)
     return mat['v']
 
+def graphconstruction_posenet():
+    source_path_skelbasis="/Users/HuongNguyen/Downloads/workspace/posenet_gftbasis.mat" #trying to load the gsf basis
+    mat = scipy.io.loadmat(source_path_skelbasis)
+    return mat['v']
+
 def skel_comp(data, no_frames, no_joints, no_coord, device):
     #importing the skeleton gft basis
     if device =='openpose':
         v = graphconstruction_openpose()
     elif device =='kinect':
         v  = graphconstruction_kinect()
+    elif device =='posenet':
+        v  = graphconstruction_posenet()
 
-    # no_frames=len(data)
-    # no_joints=25
-    # no_coord=3
+    window_size=no_frames
+
 
     #compute the motion vector
     #data format -> no_frames, no_joints, no_coord in a numpy array
     motion_vector=[]
     gft_coeff=[]
-    for i in range(1,no_frames):
-            temp=data[i,:,:]-data[i-1,:,:]  #change here and use the position data
+    for i in range(0,no_frames):
 
-            motion_vector.append(temp)
-            # print(v)
-            # print(np.matmul(v, temp[:,0]))
+        # temp=data[i,:,:]-data[i-1,:,:]  #change here and use the position data
+        # motion_vector.append(temp)
 
-            gft_coeff_temp=np.matmul(np.transpose(v), temp) #compute the gft coeff for each time frame
+        temp=data[i,:,:]
+        # print(v.shape)
 
+        gft_coeff_temp=np.matmul(np.transpose(v), temp) #compute the gft coeff for each time frame
+        gft_coeff.append(gft_coeff_temp)
 
-            gft_coeff.append(gft_coeff_temp)
     gft_coeff=np.array(gft_coeff)
-    motion_vector=np.array(motion_vector)
+    # motion_vector=np.array(motion_vector)
 
     gft_dct_coeff=gft_coeff
     #temporal dct
@@ -64,14 +78,17 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
             gft_dct_coeff[:,k,l]=dct(x, norm='ortho')
             #input this into huffman
 
-    lowest_val=np.min(gft_dct_coeff)
-    gft_dct_coeff=gft_dct_coeff-lowest_val  # to start the data from 0
+    # lowest_val=np.min(gft_dct_coeff)
+    # gft_dct_coeff=gft_dct_coeff-lowest_val  # to start the data from 0
     # print('min=',np.min(gft_dct_coeff),'max=',np.max(gft_dct_coeff))
 
-
+    qt=quantization_matrix(window_size,no_joints)  ##non uniform quantization matrix
     # quantization
     # gft_dct_coeff_round=gft_dct_coeff
-    gft_dct_coeff_round=np.round(gft_dct_coeff).astype(int)
+    gft_dct_coeff_round=np.zeros((no_frames,no_joints,no_coord))
+    for l in range(no_coord):
+        gft_dct_coeff_round[:,:,l]=(np.round(np.divide(gft_dct_coeff[:,:,l],qt),3).astype(int))
+
 
     #### do not use round off
     #use the quatization matrix and divide the coeff by the matrix
@@ -86,15 +103,16 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     # plt.show()
     # plt.close('all')
 
-    print(gft_dct_coeff_round[:,:,0])
+    # print(gft_dct_coeff_round[:,:,0])
 
     Q = np.array(gft_dct_coeff_round)
     print(Q.shape)
-    # data_dct =  np.dot(gft_dct_coeff, np.linalg.pinv(Q))
-    print(np.reshape(Q[:, :, 0], ((no_frames - 1) * no_joints), 'C'))
 
-    Q_flat = np.reshape(Q,((no_frames-1)*no_joints*no_coord),'C')
-    print(type(Q_flat))
+    # data_dct =  np.dot(gft_dct_coeff, np.linalg.pinv(Q))
+    # print(np.reshape(Q[:, :, 0], ((no_frames - 1) * no_joints), 'C'))
+
+    Q_flat = np.reshape(Q,((no_frames)*no_joints*no_coord),'C')
+    # print(type(Q_flat))
     Q_list = Q_flat.tolist()
     encoding, tree = Huffman_Encoding(Q_list)
     ## transfer encoding
@@ -104,33 +122,38 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     # err = np.linalg.norm(np.array(Q_list) - np.array(decoded_op))
     # print('encoding error', err)
 
-    decoded_mt=np.reshape(decoded_op,(no_frames-1,no_joints,no_coord),'C')
+    decoded_mt=np.reshape(decoded_op,(no_frames,no_joints,no_coord),'C')
 
     # multiply with the quantization matrix
 
     #reconstruction
-    decoded_mt=decoded_mt+lowest_val
-    recon_sig_idct=decoded_mt
+    # decoded_mt=decoded_mt+lowest_val
+    recon_sig_idct=np.zeros((no_frames,no_joints,no_coord))
+    for l in range(no_coord):
+        recon_sig_idct[:,:,l] = np.multiply(decoded_mt[:,:,l],qt)
+
+    recon_sig_idct=np.array(recon_sig_idct)
     for k in range (no_joints):
         for l in range(no_coord):
-            y=decoded_mt[:,k,l]
+            y=recon_sig_idct[:,k,l]
             recon_sig_idct[:,k,l]=idct(y, norm='ortho')
             #input this into huffman
-
+    # print('recon_sig_idct', recon_sig_idct.shape)
     #inverse gft
     recon_sig=[]
-    for t in range(no_frames-1):
+    for t in range(no_frames):
         temp=recon_sig_idct[t,:,:]
+        # print('temp size', temp.shape)
         recon_sig_perframe = np.matmul(v, temp)
         recon_sig.append(recon_sig_perframe)
     recon_sig=np.array(recon_sig)
 
-    err=np.linalg.norm(recon_sig-motion_vector)
+    #save window in json file
+
+    err=np.linalg.norm(recon_sig-data)
     print('error', err)
     return encoding, recon_sig
 
 if __name__=='__main__':
     #define data before you run this independently
     skel_comp(data, no_frames, no_joints, no_coord, device)
-
-
