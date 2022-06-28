@@ -21,4 +21,4 @@ def readFile(fileName):
 
 
 # readFile(fileName = "skeleton_data_error.csv")
-readFile(fileName = "open_pose.csv")
+readFile(fileName = "/Users/HuongNguyen/Downloads/movenet.csv")

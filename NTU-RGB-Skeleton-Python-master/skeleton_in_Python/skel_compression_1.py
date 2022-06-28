@@ -36,7 +36,7 @@ def graphconstruction_kinect():
     return mat['v']
 
 def graphconstruction_posenet():
-    source_path_skelbasis="/Users/HuongNguyen/Downloads/workspace/posenet_gftbasis.mat" #trying to load the gsf basis
+    source_path_skelbasis = "/Users/HuongNguyen/Downloads/workspace/posenet_gftbasis.mat"
     mat = scipy.io.loadmat(source_path_skelbasis)
     return mat['v']
 
@@ -87,7 +87,8 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     # gft_dct_coeff_round=gft_dct_coeff
     gft_dct_coeff_round=np.zeros((no_frames,no_joints,no_coord))
     for l in range(no_coord):
-        gft_dct_coeff_round[:,:,l]=(np.round(np.divide(gft_dct_coeff[:,:,l],qt),3).astype(int))
+        gft_dct_coeff_round[:,:,l]=(np.round(np.divide(gft_dct_coeff[:,:,l],qt),3))
+
 
 
     #### do not use round off
@@ -115,14 +116,15 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     # print(type(Q_flat))
     Q_list = Q_flat.tolist()
     encoding, tree = Huffman_Encoding(Q_list)
-    ## transfer encoding
-
+    # ## transfer encoding
+    #
     decoded_op=Huffman_Decoding(encoding, tree)
     decoded_op=np.array(decoded_op)
     # err = np.linalg.norm(np.array(Q_list) - np.array(decoded_op))
     # print('encoding error', err)
 
     decoded_mt=np.reshape(decoded_op,(no_frames,no_joints,no_coord),'C')
+    # decoded_mt = Q
 
     # multiply with the quantization matrix
 

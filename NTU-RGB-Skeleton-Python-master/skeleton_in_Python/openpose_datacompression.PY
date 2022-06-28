@@ -12,7 +12,7 @@ import array
 # import pandas as pd
 import os
 import json
-from skel_compression import *
+from skel_compression_1 import *
 # from scratch import *
 
 sourcepath="/Users/HuongNguyen/Downloads/workspace/open_pose/" #change the data path to openpose
@@ -45,7 +45,7 @@ for i in range(21,22):#len(folder1)):
 
     skel_data=np.array(skel_data)
     skel_data=np.reshape(skel_data, (no_frames,no_joints,no_coord))
-    # print(skel_data.shape)
+    print(skel_data.shape)
 
     skel_comp(skel_data, no_frames, no_joints, no_coord, device='openpose')
 
