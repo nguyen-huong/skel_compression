@@ -15,14 +15,23 @@ from scipy.fftpack import idct, dct
 from huffman import *
 import matplotlib.pyplot as plt
 from read_skeleton import *
+from RLE import *
 
 #function defination
+# def quantization_matrix(window_size,no_joints):
+#     qt=np.ones((window_size,no_joints))
+#     inc=50
+#     for i in range (window_size):
+#         qt[i,:]=inc*qt[i,:]
+#         inc-=50
+#     return qt
+
 def quantization_matrix(window_size,no_joints):
     qt=np.ones((window_size,no_joints))
-    inc=1500
+    inc=50
     for i in range (window_size):
         qt[i,:]=inc*qt[i,:]
-        inc-=50
+        inc+=50
     return qt
 
 def graphconstruction_openpose():
@@ -107,7 +116,7 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     # print(gft_dct_coeff_round[:,:,0])
 
     Q = np.array(gft_dct_coeff_round)
-    print(Q.shape)
+    # print(Q.shape)
 
     # data_dct =  np.dot(gft_dct_coeff, np.linalg.pinv(Q))
     # print(np.reshape(Q[:, :, 0], ((no_frames - 1) * no_joints), 'C'))
@@ -115,11 +124,22 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     Q_flat = np.reshape(Q,((no_frames)*no_joints*no_coord),'C')
     # print(type(Q_flat))
     Q_list = Q_flat.tolist()
+    # print(type(Q_list))
+    # print(Q_list.__len__())
+    # for i, values in range(len(Q_list)):
+    #     encoding, tree = rlencode(Q_list[i])
     encoding, tree = Huffman_Encoding(Q_list)
+    # print(encoding)
+    # x1 = rlencode(Q_list)
+    # print(x1)
+    # for i in range(len(Q_list)):
+    #     encoding, tree = rlencode(Q_list)
     # ## transfer encoding
     #
     decoded_op=Huffman_Decoding(encoding, tree)
-    decoded_op=np.array(decoded_op)
+    # for i, values in range (len(Q_list)):
+    #     decoded_op = rldecode(encoding, tree)
+    # decoded_op = rledecode(encoding, tree)
     # err = np.linalg.norm(np.array(Q_list) - np.array(decoded_op))
     # print('encoding error', err)
 
@@ -151,9 +171,15 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     recon_sig=np.array(recon_sig)
 
     #save window in json file
-
-    err=np.linalg.norm(recon_sig-data)
-    print('error', err)
+    # instead of norm, do mean square error
+    e= abs(recon_sig - data)
+    mse = np.mean(e)
+    # save window in json file
+    # err = mean(mean[e1, e2])
+    print('absolute mean error', mse)
+    # err=np.linalg.norm(recon_sig-data)
+    # print('error', err)
+    # return err
     return encoding, recon_sig
 
 if __name__=='__main__':
