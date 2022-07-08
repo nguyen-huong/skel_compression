@@ -4,5 +4,5 @@ With the advancement of reliable, fast, portable acquisition systems, human moti
 
 ## Install, Build, Run
 ```bash
-git clone --recursive 
+git clone --recursive https://github.com/nguyen-huong/skel_compression.git
 ```
