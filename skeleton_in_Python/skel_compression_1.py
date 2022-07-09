@@ -28,10 +28,11 @@ from RLE import *
 
 def quantization_matrix(window_size,no_joints):
     qt=np.ones((window_size,no_joints))
-    inc=50
+    inc=10
     for i in range (window_size):
         qt[i,:]=inc*qt[i,:]
         inc+=50
+    qt[0,0]=100
     return qt
 
 def graphconstruction_openpose():
@@ -96,7 +97,7 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     # gft_dct_coeff_round=gft_dct_coeff
     gft_dct_coeff_round=np.zeros((no_frames,no_joints,no_coord))
     for l in range(no_coord):
-        gft_dct_coeff_round[:,:,l]=(np.round(np.divide(gft_dct_coeff[:,:,l],qt),3))
+        gft_dct_coeff_round[:,:,l]=(np.round(np.divide(gft_dct_coeff[:,:,l],qt),2))
 
 
 
@@ -130,8 +131,9 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     #     encoding, tree = rlencode(Q_list[i])
     encoding, tree = Huffman_Encoding(Q_list)
     # print(encoding)
-    # x1 = rlencode(Q_list)
-    # print(x1)
+    x1 = rlencode(Q_list)
+    with np.printoptions(threshold=np.inf):
+        print(x1)
     # for i in range(len(Q_list)):
     #     encoding, tree = rlencode(Q_list)
     # ## transfer encoding
@@ -140,6 +142,8 @@ def skel_comp(data, no_frames, no_joints, no_coord, device):
     # for i, values in range (len(Q_list)):
     #     decoded_op = rldecode(encoding, tree)
     # decoded_op = rledecode(encoding, tree)
+    # x2 = rldecode(x1)
+    # print(x2)
     # err = np.linalg.norm(np.array(Q_list) - np.array(decoded_op))
     # print('encoding error', err)
 
